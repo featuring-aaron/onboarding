@@ -128,6 +128,36 @@ const MOCK_DATA: Discover_Influencer[] = Array.from({ length: 465 }, (_, i) => (
  *        required: false
  *        schema:
  *          type: integer
+ *      - name: username
+ *        in: query
+ *        description: username 검색 (포함 검색)
+ *        required: false
+ *        schema:
+ *          type: string
+ *      - name: min_avg_feed_like
+ *        in: query
+ *        description: 최소 평균 피드 좋아요 수
+ *        required: false
+ *        schema:
+ *          type: number
+ *      - name: max_avg_feed_like
+ *        in: query
+ *        description: 최대 평균 피드 좋아요 수
+ *        required: false
+ *        schema:
+ *          type: number
+ *      - name: min_real_engagement
+ *        in: query
+ *        description: 최소 실제 참여율
+ *        required: false
+ *        schema:
+ *          type: number
+ *      - name: max_real_engagement
+ *        in: query
+ *        description: 최대 실제 참여율
+ *        required: false
+ *        schema:
+ *          type: number
  *      - name: main_audience_gender
  *        in: query
  *        description: 주요 오디언스 성별
@@ -202,6 +232,11 @@ export default function handler(
 		page_size = '20',
 		min_follower,
 		max_follower,
+		username,
+		min_avg_feed_like,
+		max_avg_feed_like,
+		min_real_engagement,
+		max_real_engagement,
 		main_audience_gender,
 		main_audience_age_range,
 		is_verified,
@@ -238,6 +273,20 @@ export default function handler(
 	}
 	if (max_follower !== undefined && (isNaN(Number(max_follower)) || Number(max_follower) < 0)) {
 		return res.status(400).json({ error: 'Invalid max_follower parameter. Must be a non-negative integer.' });
+	}
+	// min/max_avg_feed_like validation
+	if (min_avg_feed_like !== undefined && isNaN(Number(min_avg_feed_like))) {
+		return res.status(400).json({ error: 'Invalid min_avg_feed_like parameter. Must be a number.' });
+	}
+	if (max_avg_feed_like !== undefined && isNaN(Number(max_avg_feed_like))) {
+		return res.status(400).json({ error: 'Invalid max_avg_feed_like parameter. Must be a number.' });
+	}
+	// min/max_real_engagement validation
+	if (min_real_engagement !== undefined && isNaN(Number(min_real_engagement))) {
+		return res.status(400).json({ error: 'Invalid min_real_engagement parameter. Must be a number.' });
+	}
+	if (max_real_engagement !== undefined && isNaN(Number(max_real_engagement))) {
+		return res.status(400).json({ error: 'Invalid max_real_engagement parameter. Must be a number.' });
 	}
 	// main_audience_gender validation
 	if (
@@ -278,6 +327,21 @@ export default function handler(
 	}
 	if (max_follower && !isNaN(+max_follower)) {
 		result = result.filter((i) => i.follower <= +max_follower);
+	}
+	if (username && typeof username === 'string') {
+		result = result.filter((i) => i.username.toLowerCase().includes(username.toLowerCase()));
+	}
+	if (min_avg_feed_like && !isNaN(+min_avg_feed_like)) {
+		result = result.filter((i) => i.avg_feed_like >= +min_avg_feed_like);
+	}
+	if (max_avg_feed_like && !isNaN(+max_avg_feed_like)) {
+		result = result.filter((i) => i.avg_feed_like <= +max_avg_feed_like);
+	}
+	if (min_real_engagement && !isNaN(+min_real_engagement)) {
+		result = result.filter((i) => i.real_engagement >= +min_real_engagement);
+	}
+	if (max_real_engagement && !isNaN(+max_real_engagement)) {
+		result = result.filter((i) => i.real_engagement <= +max_real_engagement);
 	}
 	if (main_audience_gender && typeof main_audience_gender === 'string') {
 		result = result.filter((i) => i.main_audience_gender === main_audience_gender);
