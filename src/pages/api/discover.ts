@@ -367,10 +367,12 @@ export default function handler(
 	const start = (pageNum - 1) * size;
 	const data = result.slice(start, start + size);
 
-	res.status(200).json({
-		total: result.length,
-		page: pageNum,
-		pageSize: size,
-		data,
-	});
+	setTimeout(() => {
+		res.status(200).json({
+			total: result.length,
+			page: pageNum,
+			pageSize: size,
+			data,
+		});
+	}, 2000);
 }
