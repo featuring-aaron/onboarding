@@ -78,7 +78,7 @@ type Discover_Influencer = {
 	is_verified: boolean;
 };
 
-const MOCK_DATA: Discover_Influencer[] = Array.from({ length: 465 }, (_, i) => ({
+const MOCK_DATA: Discover_Influencer[] = Array.from({ length: 4000 }, (_, i) => ({
 	pk: `user_${10001 + i}`,
 	username: `user_${10001 + i}`,
 	full_name: `인플루언서 ${10001 + i}`,
