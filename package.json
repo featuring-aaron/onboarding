@@ -10,8 +10,9 @@
 		"lint": "next lint"
 	},
 	"dependencies": {
-		"@featuring-corp/components": "^0.0.101",
-		"@featuring-corp/design-tokens": "^0.0.12",
+		"@featuring-corp/components": "*",
+		"@featuring-corp/design-tokens": "*",
+		"@featuring-corp/icons": "*",
 		"next": "14.2.7",
 		"next-swagger-doc": "^0.4.0",
 		"react": "^18",
