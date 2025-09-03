@@ -62,21 +62,49 @@ import type { NextApiRequest, NextApiResponse } from 'next';
  *        description: 메타 인증 여부
  *        example: true
  */
+type Category =
+  | "스포츠" 
+  | "음악/댄스" 
+  | "일상" 
+  | "영화/방송"
+  | "뷰티" 
+  | "패션" 
+  | "기타동물" 
+  | "게임";
+
 type Discover_Influencer = {
-	pk: string;
-	username: string;
-	full_name: string;
-	account_link: string;
-	profile_img_link: string;
-	follower: number;
-	real_follower: number;
-	avg_feed_like: number;
-	avg_reach: number;
-	real_engagement: number;
-	main_audience_gender: 'F' | 'M' | null;
-	main_audience_age_range: string | null;
-	is_verified: boolean;
+  pk: string;
+  username: string;
+  full_name: string;
+  account_link: string;
+  profile_img_link: string;
+  follower: number;
+  real_follower: number;
+  avg_feed_like: number;
+  avg_reach: number;
+  real_engagement: number;
+  main_audience_gender: 'F' | 'M' | null;
+  main_audience_age_range: string | null;
+  is_verified: boolean;
+  categories: Category[];   
+  last_upload_date: string | null;
+  avg_video_views: number | null;
+  avg_video_likes: number | null;
+  avg_ad_cost: number | null;
+  cpr: number | null;
 };
+const ALL_CATEGORIES: Category[] = [
+	"스포츠", "음악/댄스", "일상", "영화/방송",
+	"뷰티", "패션", "기타동물", "게임"
+  ];
+  
+  function getRandomCategories(): Category[] {
+
+	const count = Math.floor(Math.random() * 2) + 1; 
+	const shuffled = [...ALL_CATEGORIES].sort(() => 0.5 - Math.random());
+	return shuffled.slice(0, count);
+  }
+  
 
 const MOCK_DATA: Discover_Influencer[] = Array.from({ length: 4000 }, (_, i) => ({
 	pk: `user_${10001 + i}`,
@@ -87,11 +115,17 @@ const MOCK_DATA: Discover_Influencer[] = Array.from({ length: 4000 }, (_, i) => 
 	follower: Math.floor(Math.random() * 50000 + 1000),
 	real_follower: Math.floor(Math.random() * 10000),
 	avg_feed_like: Math.random() * 300,
-	avg_reach: Math.floor(Math.random() * 10000),
+	avg_reach: Math.floor(Math.random() * 10000 ),
 	real_engagement: Number(((Math.random() * 300) / 10000).toFixed(3)),
 	main_audience_gender: i % 2 === 0 ? 'F' : 'M',
 	main_audience_age_range: ['18-24', '25-34', '35-44'][i % 3],
 	is_verified: i % 4 === 0,
+	categories: getRandomCategories(),
+	last_upload_date: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+	avg_video_views: Math.floor(Math.random() * 50000 + 1000),
+	avg_video_likes: Math.floor(Math.random() * 50000 + 1000),
+	cpr:  Number(((Math.random() * 1000) )),
+	avg_ad_cost: Math.floor(Math.random() * 1000000 + 100000)
 }));
 
 /**

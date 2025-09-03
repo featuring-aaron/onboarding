@@ -5,7 +5,7 @@ const withVanillaExtract = createVanillaExtractPlugin();
 const nextConfig = {
 	reactStrictMode: true,
 	transpilePackages: ['@featuring-corp/components'],
-	output: 'standalone',
+	// output: 'standalone',
 };
 
 module.exports = withVanillaExtract(nextConfig);

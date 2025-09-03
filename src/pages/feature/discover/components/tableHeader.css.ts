@@ -6,6 +6,7 @@ export const container = style({
 	justifyContent: 'space-between',
 	padding: '0 32px',
 	height: '50px',
+	
 });
 
 export const title = style({
