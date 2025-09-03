@@ -1,14 +1,22 @@
 import { CoreSegmentedControl, CoreSegmentedControlGroup } from '@featuring-corp/components';
-import { IconDocumentOutline } from '@featuring-corp/icons';
+import {
+	IconDocumentOutline,
+	IconInstagramColored,
+	IconYoutubeColored,
+	IconXColored,
+	IconNaverBlogColored,
+	IconTiktokColored,
+} from '@featuring-corp/icons';
 import { useState } from 'react';
 import * as styles from './snsCategory.css';
+import { CoreIconBadge } from '@featuring-corp/components';
 
 const snsCategory = [
-	{ title: '인스타그램', icon: <IconDocumentOutline /> },
-	{ title: '유튜브', icon: <IconDocumentOutline /> },
-	{ title: '엑스', icon: <IconDocumentOutline /> },
-	{ title: '틱톡', icon: <IconDocumentOutline /> },
-	{ title: '네이버 블로그', icon: <IconDocumentOutline /> },
+	{ title: '인스타그램', icon: <CoreIconBadge icon={<IconInstagramColored />} /> },
+	{ title: '유튜브', icon: <CoreIconBadge icon={<IconYoutubeColored />} /> },
+	{ title: '엑스', icon: <CoreIconBadge icon={<IconXColored />} /> },
+	{ title: '틱톡', icon: <CoreIconBadge icon={<IconTiktokColored />} /> },
+	{ title: '네이버 블로그', icon: <CoreIconBadge icon={<IconNaverBlogColored />} /> },
 ];
 
 export default function SnsCategory() {
@@ -18,7 +26,7 @@ export default function SnsCategory() {
 	};
 	return (
 		<div className={styles.segmentedControlGroupWrapper}>
-			<CoreSegmentedControlGroup>
+			<CoreSegmentedControlGroup className={styles.segmentedControlGroup}>
 				{snsCategory.map((item) => (
 					<CoreSegmentedControl
 						className={styles.segmentedControlBox}
