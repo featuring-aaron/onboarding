@@ -84,10 +84,11 @@ export const headerCell = style({
 	color: '#6b7280',
 	backgroundColor: '#f9fafb',
 	borderBottom: '1px solid #e5e7eb',
+	borderRight: `1px solid ${color.border.default}`,
 });
 
 export const bodyCell = style({
-
+	borderRight: `1px solid ${color.border.default}`,
 	
 	whiteSpace: 'nowrap',
 	overflow: 'hidden',
@@ -108,6 +109,7 @@ export const scrollTable = style({
 	width: '100%',
 	minWidth: '800px', // 최소 너비 보장
 	tableLayout: 'fixed',
+
 });
 
 export const selectPageNationWrapper = style([sprinkles({

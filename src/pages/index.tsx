@@ -1,4 +1,4 @@
-import DiscoverPage from '../feature/discover/DiscoverPage';		
+import DiscoverPage from './DiscoverPage';
 
 export default function Home() {
 	return <DiscoverPage />;

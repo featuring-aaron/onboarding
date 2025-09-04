@@ -1,14 +1,14 @@
 'use client';
 
+import React from 'react';
 import { type SortingState } from '@tanstack/react-table';
 
-import { CorePagination, CoreTable, CoreCheckbox, CoreAvatar, CoreTag, CoreSelect, CoreSelectItem } from '@featuring-corp/components';
-import type { Influencer } from '../../../types/influencer';
+import { CorePagination, CoreTable, CoreCheckbox, CoreAvatar, CoreTag, CoreSelect, CoreSelectItem, CoreMultiSelectPrim } from '@featuring-corp/components';
+import type { Influencer } from '@/types/influencer';
 
 import * as styles from './influencerTable.css';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { sprinkles } from '@/styles/sprinkles.css';
 
 
 
@@ -29,6 +29,23 @@ const scrollHeaders: Array<{ label: string; key: keyof Influencer }> = [
 	{ label: '예상 광고비', key: 'avg_ad_cost' },
 ];
 
+// 각 컬럼의 width 정의
+const columnWidths = [
+	'150px', // 카테고리
+	'120px', // 최근 업로드 일
+	'140px', // 팔로워 수
+	'160px', // 예상 유효 팔로워수
+	'100px', // ER
+	'180px', // 예상 평균 도달 수 (더 넓게)
+	'160px', // 평균 피드 좋아요 수
+	'160px', // 평균 동영상 조회 수
+	'160px', // 평균 동영상 좋아요 수
+	'120px', // 오디언스 성별
+	'120px', // 오디언스 나이
+	'120px', // 예상 CPR
+	'120px'  // 예상 광고비
+];
+
 const cellByKey: Partial<Record<keyof Influencer, (row: Influencer) => React.ReactNode>> = {
 	full_name: (r) => (
 		<div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -42,6 +59,9 @@ const cellByKey: Partial<Record<keyof Influencer, (row: Influencer) => React.Rea
 	),
 
 	categories: (r) => {
+		if (!r.categories || (Array.isArray(r.categories) && r.categories.length === 0)) {
+			return '-';
+		}
 		const cats = Array.isArray(r.categories) ? r.categories : [r.categories as unknown as string];
 		return (
 			<div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
@@ -53,11 +73,11 @@ const cellByKey: Partial<Record<keyof Influencer, (row: Influencer) => React.Rea
 	},
 
 	last_upload_date: (r) => r.last_upload_date ?? '-',
-	follower: (r) => r.follower.toLocaleString(),
-	real_follower: (r) => r.real_follower.toLocaleString(),
-	real_engagement: (r) => r.real_engagement.toFixed(1),
-	avg_reach: (r) => r.avg_reach.toLocaleString(),
-	avg_feed_like: (r) => r.avg_feed_like.toFixed(1),
+	follower: (r) => r.follower?.toLocaleString() ?? '-',
+	real_follower: (r) => r.real_follower?.toLocaleString() ?? '-',
+	real_engagement: (r) => r.real_engagement ? r.real_engagement.toFixed(2) + '%' : '-',
+	avg_reach: (r) => r.avg_reach?.toLocaleString() ?? '-',
+	avg_feed_like: (r) => r.avg_feed_like ? r.avg_feed_like.toFixed(1) : '-',
 	avg_video_views: (r) => r.avg_video_views?.toLocaleString() ?? '-',
 	avg_video_likes: (r) => r.avg_video_likes?.toLocaleString() ?? '-',
 	main_audience_gender: (r) =>
@@ -69,9 +89,16 @@ const cellByKey: Partial<Record<keyof Influencer, (row: Influencer) => React.Rea
 
 function defaultRender<T extends keyof Influencer>(row: Influencer, key: T) {
 	const v = row[key] as unknown;
-	if (v == null) return '-';
-	if (typeof v === 'number') return v.toString();
-	if (Array.isArray(v)) return v.join(', ');
+	if (v == null || v === undefined) return '-';
+	if (typeof v === 'number') {
+		if (isNaN(v)) return '-';
+		return v.toString();
+	}
+	if (Array.isArray(v)) {
+		if (v.length === 0) return '-';
+		return v.join(', ');
+	}
+	if (typeof v === 'string' && v.trim() === '') return '-';
 	return String(v);
 }
 
@@ -80,20 +107,20 @@ interface InfluencerTableProps {
 	sorting: SortingState;
 	onSortingChange: (updaterOrValue: SortingState | ((old: SortingState) => SortingState)) => void;
 	totalCount?: number;
-	currentPage?: number;
-	onPageChange?: (page: number) => void;
+	itemsPerPage: number;
+	onItemsPerPageChange: (itemsPerPage: number) => void;
 }
 
 export function InfluencerTable({
 	data,
 	totalCount,
-	currentPage: externalCurrentPage,
-
+	itemsPerPage,
+	onItemsPerPageChange,
 }: InfluencerTableProps) {
 	const router = useRouter();
 	const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
 
-	const [itemsPerPage, setItemsPerPage] = useState(5);
+	// itemsPerPage는 props로 받아서 사용
 	// 선택된 갯수에 따라 동적으로 라벨 생성
 	const fixedHeaders: Array<{ label: string; key: keyof Influencer }> = [
 		{ label: selectedItems.size > 0 ? `${selectedItems.size}명 선택` : '계정', key: 'full_name' },
@@ -102,14 +129,11 @@ export function InfluencerTable({
 	// URL 쿼리 파라미터에서 현재 페이지를 가져오거나 기본값 1 사용
 	const currentPage = parseInt(router.query.page as string, 10) || 1;
 
-	// API에서 받은 totalCount를 기준으로 총 페이지 수 계산
-	// totalCount가 없으면 현재 받은 데이터 개수로 계산
-	const totalPages = totalCount ? Math.ceil(totalCount / itemsPerPage) : Math.ceil(data.length / itemsPerPage);
+	// 서버 사이드 페이지네이션을 사용하므로 받은 데이터를 그대로 표시
+	const currentData = data;
 
-	// 현재 페이지에 해당하는 데이터만 표시
-	const startIndex = (currentPage - 1) * itemsPerPage;
-	const endIndex = startIndex + itemsPerPage;
-	const currentData = data.slice(startIndex, endIndex);
+	// totalCount를 기준으로 총 페이지 수 계산 (서버에서 받은 totalCount 사용)
+	const totalPages = totalCount ? Math.ceil(totalCount / itemsPerPage) : 1;
 
 	useEffect(() => {
 		const pageFromUrl = parseInt(router.query.page as string, 10);
@@ -150,8 +174,10 @@ export function InfluencerTable({
 		setSelectedItems(newSelectedItems);
 	};
 	const handleSelectChange = (value: string) => {
-
-		setItemsPerPage(parseInt(value));
+		const newItemsPerPage = parseInt(value);
+		onItemsPerPageChange(newItemsPerPage);
+		// 페이지당 항목 수가 변경되면 첫 페이지로 이동
+		router.push({ pathname: router.pathname, query: { ...router.query, page: 1 } }, undefined, { shallow: true });
 	};
 	return (
 		<div>
@@ -199,7 +225,7 @@ export function InfluencerTable({
 										<CoreTable.TableHeader
 											className={styles.headerCell}
 											key={h.key as string}
-											style={{ width: index === 0 ? '150px' : index === 1 ? '120px' : index === 2 ? '140px' : index === 3 ? '160px' : index === 4 ? '180px' : index === 5 ? '100px' : index === 6 ? '160px' : index === 7 ? '160px' : index === 8 ? '160px' : index === 9 ? '160px' : index === 10 ? '120px' : index === 11 ? '120px' : index === 12 ? '120px' : '120px' }}
+											style={{ width: columnWidths[index] || '120px' }}
 										>
 											{h.label}
 										</CoreTable.TableHeader>
@@ -214,7 +240,7 @@ export function InfluencerTable({
 											<CoreTable.TableCell
 												key={String(h.key)}
 												className={styles.bodyCell}
-												style={{ width: index === 0 ? '150px' : index === 1 ? '120px' : index === 2 ? '140px' : index === 3 ? '160px' : index === 4 ? '180px' : index === 5 ? '100px' : index === 6 ? '160px' : index === 7 ? '160px' : index === 8 ? '160px' : index === 9 ? '160px' : index === 10 ? '120px' : index === 11 ? '120px' : index === 12 ? '120px' : '120px' }}
+												style={{ width: columnWidths[index] || '120px' }}
 											>
 												{cellByKey[h.key]?.(row) ?? defaultRender(row, h.key as keyof Influencer)}
 											</CoreTable.TableCell>
@@ -231,11 +257,10 @@ export function InfluencerTable({
 						labelElement="/ page"
 						size="lg"
 						width="120px"
-						defaultValue="5"
+						value={itemsPerPage.toString()}
 						secondaryLabel="/ page"
 						optionPlacement="top-start"
-
-						setValue={(value: string) => setItemsPerPage(parseInt(value))}
+						setValue={handleSelectChange}
 					>
 						<CoreSelectItem value="5">5명</CoreSelectItem>
 						<CoreSelectItem value="7">7명</CoreSelectItem>
