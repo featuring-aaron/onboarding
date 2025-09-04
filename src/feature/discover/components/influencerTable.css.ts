@@ -1,6 +1,8 @@
+import { sprinkles } from '@/styles/sprinkles.css';
 import { colors, spacing } from '@featuring-corp/design-tokens/tokens/global';
 import { color, type SemanticBorderColor } from '@featuring-corp/design-tokens/tokens/semantic';
 import { style } from '@vanilla-extract/css';
+import { vars } from '@/styles/theme.css';
 
 export const tableBodyRow = style({
 	height: '86px',
@@ -17,9 +19,11 @@ export const tableHeaderRow = style({
 export const checkBox = style({
 	width: '30px',
 	height: '38px',
+	paddingLeft: vars.global.spacing[800],
 });
 
 export const checkBoxBody = style([
+	
 	checkBox,
 	{
 		height: '56px',
@@ -104,4 +108,22 @@ export const scrollTable = style({
 	width: '100%',
 	minWidth: '800px', // 최소 너비 보장
 	tableLayout: 'fixed',
+});
+
+export const selectPageNationWrapper = style([sprinkles({
+	paddingY: 'spacing-400',
+}),{
+	display: 'flex',
+	width: '100%',
+	justifyContent: 'space-between',
+	alignItems: 'center',
+	paddingLeft: vars.global.spacing[800],
+	
+	position: 'relative',
+}]);
+
+export const paginationContainer = style({
+	position: 'absolute',
+	left: '50%',
+	transform: 'translateX(-50%)',
 });

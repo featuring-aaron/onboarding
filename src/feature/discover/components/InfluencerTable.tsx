@@ -2,12 +2,13 @@
 
 import { type SortingState } from '@tanstack/react-table';
 
-import { CorePagination, CoreTable, CoreCheckbox, CoreAvatar, CoreTag } from '@featuring-corp/components';
+import { CorePagination, CoreTable, CoreCheckbox, CoreAvatar, CoreTag, CoreSelect, CoreSelectItem } from '@featuring-corp/components';
 import type { Influencer } from '../../../types/influencer';
 
 import * as styles from './influencerTable.css';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { sprinkles } from '@/styles/sprinkles.css';
 
 
 
@@ -83,28 +84,28 @@ interface InfluencerTableProps {
 	onPageChange?: (page: number) => void;
 }
 
-export function InfluencerTable({ 
-	data, 
-	totalCount, 
-	currentPage: externalCurrentPage, 
+export function InfluencerTable({
+	data,
+	totalCount,
+	currentPage: externalCurrentPage,
 
 }: InfluencerTableProps) {
 	const router = useRouter();
 	const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
-	const itemsPerPage = 7;
-	
+
+	const [itemsPerPage, setItemsPerPage] = useState(5);
 	// 선택된 갯수에 따라 동적으로 라벨 생성
 	const fixedHeaders: Array<{ label: string; key: keyof Influencer }> = [
 		{ label: selectedItems.size > 0 ? `${selectedItems.size}명 선택` : '계정', key: 'full_name' },
 	];
-	
+
 	// URL 쿼리 파라미터에서 현재 페이지를 가져오거나 기본값 1 사용
 	const currentPage = parseInt(router.query.page as string, 10) || 1;
-	
+
 	// API에서 받은 totalCount를 기준으로 총 페이지 수 계산
 	// totalCount가 없으면 현재 받은 데이터 개수로 계산
 	const totalPages = totalCount ? Math.ceil(totalCount / itemsPerPage) : Math.ceil(data.length / itemsPerPage);
-	
+
 	// 현재 페이지에 해당하는 데이터만 표시
 	const startIndex = (currentPage - 1) * itemsPerPage;
 	const endIndex = startIndex + itemsPerPage;
@@ -113,9 +114,9 @@ export function InfluencerTable({
 	useEffect(() => {
 		const pageFromUrl = parseInt(router.query.page as string, 10);
 		if (pageFromUrl && pageFromUrl > 0 && pageFromUrl <= totalPages) {
-	
-		} else if (router.query.page ) {
-			
+
+		} else if (router.query.page) {
+
 			router.replace({ pathname: router.pathname, query: { ...router.query, page: 1 } }, undefined, { shallow: true });
 		}
 	}, [router.query.page, totalPages, router]);
@@ -148,12 +149,15 @@ export function InfluencerTable({
 		}
 		setSelectedItems(newSelectedItems);
 	};
+	const handleSelectChange = (value: string) => {
 
+		setItemsPerPage(parseInt(value));
+	};
 	return (
 		<div>
 			<CoreTable.Container className={styles.tableWrapper}>
 				<div className={styles.tableContainer}>
-			
+
 					<div className={styles.fixedArea}>
 						<CoreTable.Table size="lg" className={styles.fixedTable}>
 							<CoreTable.TableHead className={styles.tableHeaderRow}>
@@ -185,30 +189,30 @@ export function InfluencerTable({
 						</CoreTable.Table>
 					</div>
 
-				
+
 					<div className={styles.scrollArea}>
 						<CoreTable.Table size="lg" className={styles.scrollTable}>
 							<CoreTable.TableHead className={styles.tableHeaderRow}>
 								<CoreTable.TableRow className={styles.tableHeaderRow}>
-									
-										{scrollHeaders.map((h, index) => (
-											<CoreTable.TableHeader 
-												className={styles.headerCell} 
-												key={h.key as string}
-												style={{ width: index === 0 ? '150px' : index === 1 ? '120px' : index === 2 ? '140px' : index === 3 ? '160px' : index === 4 ? '180px' : index === 5 ? '100px' : index === 6 ? '160px' : index === 7 ? '160px' : index === 8 ? '160px' : index === 9 ? '160px' : index === 10 ? '120px' : index === 11 ? '120px' : index === 12 ? '120px' : '120px' }}
-											>
-												{h.label}
-											</CoreTable.TableHeader>
-										))}	
-										
+
+									{scrollHeaders.map((h, index) => (
+										<CoreTable.TableHeader
+											className={styles.headerCell}
+											key={h.key as string}
+											style={{ width: index === 0 ? '150px' : index === 1 ? '120px' : index === 2 ? '140px' : index === 3 ? '160px' : index === 4 ? '180px' : index === 5 ? '100px' : index === 6 ? '160px' : index === 7 ? '160px' : index === 8 ? '160px' : index === 9 ? '160px' : index === 10 ? '120px' : index === 11 ? '120px' : index === 12 ? '120px' : '120px' }}
+										>
+											{h.label}
+										</CoreTable.TableHeader>
+									))}
+
 								</CoreTable.TableRow>
 							</CoreTable.TableHead>
 							<CoreTable.TableBody>
 								{currentData.map((row) => (
 									<CoreTable.TableRow key={row.pk} className={styles.tableBodyRow}>
 										{scrollHeaders.map((h, index) => (
-											<CoreTable.TableCell 
-												key={String(h.key)} 
+											<CoreTable.TableCell
+												key={String(h.key)}
 												className={styles.bodyCell}
 												style={{ width: index === 0 ? '150px' : index === 1 ? '120px' : index === 2 ? '140px' : index === 3 ? '160px' : index === 4 ? '180px' : index === 5 ? '100px' : index === 6 ? '160px' : index === 7 ? '160px' : index === 8 ? '160px' : index === 9 ? '160px' : index === 10 ? '120px' : index === 11 ? '120px' : index === 12 ? '120px' : '120px' }}
 											>
@@ -221,15 +225,31 @@ export function InfluencerTable({
 						</CoreTable.Table>
 					</div>
 				</div>
-				<div
-					style={{
-						display: 'flex',
-						justifyContent: 'flex-end',
-					}}
-				>
-					<CorePagination activePage={currentPage} onPageChange={handlePageChange} totalPage={totalPages} />
+
+				<div className={styles.selectPageNationWrapper}>
+					<CoreSelect
+						labelElement="/ page"
+						size="lg"
+						width="120px"
+						defaultValue="5"
+						secondaryLabel="/ page"
+						optionPlacement="top-start"
+
+						setValue={(value: string) => setItemsPerPage(parseInt(value))}
+					>
+						<CoreSelectItem value="5">5명</CoreSelectItem>
+						<CoreSelectItem value="7">7명</CoreSelectItem>
+						<CoreSelectItem value="10">10명</CoreSelectItem>
+						<CoreSelectItem value="15">15명</CoreSelectItem>
+
+					</CoreSelect>
+					<div className={styles.paginationContainer}>
+						<CorePagination activePage={currentPage} onPageChange={handlePageChange} totalPage={totalPages} />
+					</div>
 				</div>
-			</CoreTable.Container>
-		</div>
+
+
+			</CoreTable.Container >
+		</div >
 	);
 }

@@ -3,7 +3,7 @@ import { style } from '@vanilla-extract/css';
 import { vars } from '@/styles/theme.css';
 import { sprinkles } from '@/styles/sprinkles.css';
 export const container = style([
-	sprinkles({ gap: 'spacing-200', paddingX: 'spacing-400' }),
+	sprinkles({ gap: 'spacing-200', paddingX: 'spacing-800' }),
 	{
 		gap: vars.global.spacing[200],
 		display: 'flex',
