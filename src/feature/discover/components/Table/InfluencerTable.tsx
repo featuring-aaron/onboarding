@@ -12,79 +12,46 @@ import { useRouter } from 'next/router';
 
 
 
-// 스크롤 컬럼 (나머지 모든 컬럼)
-const scrollHeaders: Array<{ label: string; key: keyof Influencer }> = [
-	{ label: '카테고리', key: 'categories' },
-	{ label: '최근 업로드 일', key: 'last_upload_date' },
-	{ label: '팔로워 수', key: 'follower' },
-	{ label: '예상 유효 팔로워수', key: 'real_follower' },
-	{ label: 'ER', key: 'real_engagement' },
-	{ label: '예상 평균 도달 수', key: 'avg_reach' },
-	{ label: '평균 피드 좋아요 수', key: 'avg_feed_like' },
-	{ label: '평균 동영상 조회 수', key: 'avg_video_views' },
-	{ label: '평균 동영상 좋아요 수', key: 'avg_video_likes' },
-	{ label: '오디언스 성별', key: 'main_audience_gender' },
-	{ label: '오디언스 나이', key: 'main_audience_age_range' },
-	{ label: '예상 CPR', key: 'cpr' },
-	{ label: '예상 광고비', key: 'avg_ad_cost' },
+// 스크롤 컬럼 (나머지 모든 컬럼) - API에서 실제로 받아오는 데이터만
+const scrollHeaders: Array<{ label: string; key: keyof Influencer; sortable?: boolean }> = [
+	{ label: '팔로워 수', key: 'follower', sortable: true },
+	{ label: '예상 유효 팔로워수', key: 'real_follower', sortable: true },
+	{ label: 'ER', key: 'real_engagement', sortable: true },
+	{ label: '예상 평균 도달 수', key: 'avg_reach', sortable: true },
+	{ label: '평균 피드 좋아요 수', key: 'avg_feed_like', sortable: true },
+	{ label: '오디언스 성별', key: 'main_audience_gender', sortable: false },
+	{ label: '오디언스 나이', key: 'main_audience_age_range', sortable: false },
 ];
 
-// 각 컬럼의 width 정의
+// 각 컬럼의 width 정의 - API에서 실제로 받아오는 데이터만
 const columnWidths = [
-	'150px', // 카테고리
-	'120px', // 최근 업로드 일
 	'140px', // 팔로워 수
 	'160px', // 예상 유효 팔로워수
 	'100px', // ER
-	'180px', // 예상 평균 도달 수 (더 넓게)
+	'180px', // 예상 평균 도달 수
 	'160px', // 평균 피드 좋아요 수
-	'160px', // 평균 동영상 조회 수
-	'160px', // 평균 동영상 좋아요 수
 	'120px', // 오디언스 성별
 	'120px', // 오디언스 나이
-	'120px', // 예상 CPR
-	'120px'  // 예상 광고비
 ];
 
 const cellByKey: Partial<Record<keyof Influencer, (row: Influencer) => React.ReactNode>> = {
 	full_name: (r) => (
 		<div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
 			<CoreAvatar src={r.profile_img_link} />
-
 			<div>
 				<div style={{ fontWeight: 'bold' }}>{r.full_name}</div>
 				<div style={{ fontSize: 12, color: '#666' }}>@{r.username}</div>
 			</div>
 		</div>
 	),
-
-	categories: (r) => {
-		if (!r.categories || (Array.isArray(r.categories) && r.categories.length === 0)) {
-			return '-';
-		}
-		const cats = Array.isArray(r.categories) ? r.categories : [r.categories as unknown as string];
-		return (
-			<div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-				{cats.map((c: string) => (
-					<CoreTag key={c} text={c} />
-				))}
-			</div>
-		);
-	},
-
-	last_upload_date: (r) => r.last_upload_date ?? '-',
 	follower: (r) => r.follower?.toLocaleString() ?? '-',
 	real_follower: (r) => r.real_follower?.toLocaleString() ?? '-',
-	real_engagement: (r) => r.real_engagement ? r.real_engagement.toFixed(2) + '%' : '-',
+	real_engagement: (r) => r.real_engagement ? (r.real_engagement * 100).toFixed(2) + '%' : '-',
 	avg_reach: (r) => r.avg_reach?.toLocaleString() ?? '-',
 	avg_feed_like: (r) => r.avg_feed_like ? r.avg_feed_like.toFixed(1) : '-',
-	avg_video_views: (r) => r.avg_video_views?.toLocaleString() ?? '-',
-	avg_video_likes: (r) => r.avg_video_likes?.toLocaleString() ?? '-',
 	main_audience_gender: (r) =>
 		r.main_audience_gender === 'F' ? '여성' : r.main_audience_gender === 'M' ? '남성' : '-',
 	main_audience_age_range: (r) => r.main_audience_age_range ?? '-',
-	cpr: (r) => r.cpr?.toLocaleString() ?? '-',
-	avg_ad_cost: (r) => r.avg_ad_cost?.toLocaleString() ?? '-',
 };
 
 function defaultRender<T extends keyof Influencer>(row: Influencer, key: T) {
@@ -113,6 +80,8 @@ interface InfluencerTableProps {
 
 export function InfluencerTable({
 	data,
+	sorting,
+	onSortingChange,
 	totalCount,
 	itemsPerPage,
 	onItemsPerPageChange,
@@ -179,6 +148,32 @@ export function InfluencerTable({
 		// 페이지당 항목 수가 변경되면 첫 페이지로 이동
 		router.push({ pathname: router.pathname, query: { ...router.query, page: 1 } }, undefined, { shallow: true });
 	};
+
+	// 헤더 클릭 핸들러
+	const handleHeaderClick = (key: keyof Influencer) => {
+		const currentSort = sorting.find(s => s.id === key);
+		let newSorting: SortingState;
+
+		if (!currentSort) {
+			// 현재 정렬되지 않은 컬럼을 클릭하면 오름차순으로 정렬
+			newSorting = [{ id: key, desc: false }];
+		} else if (currentSort.desc) {
+			// 내림차순에서 클릭하면 정렬 해제
+			newSorting = [];
+		} else {
+			// 오름차순에서 클릭하면 내림차순으로 변경
+			newSorting = [{ id: key, desc: true }];
+		}
+
+		onSortingChange(newSorting);
+	};
+
+	// 정렬 방향 표시를 위한 함수
+	const getSortDirection = (key: keyof Influencer) => {
+		const currentSort = sorting.find(s => s.id === key);
+		if (!currentSort) return null;
+		return currentSort.desc ? 'desc' : 'asc';
+	};
 	return (
 		<div>
 			<CoreTable.Container className={styles.tableWrapper}>
@@ -225,9 +220,20 @@ export function InfluencerTable({
 										<CoreTable.TableHeader
 											className={styles.headerCell}
 											key={h.key as string}
-											style={{ width: columnWidths[index] || '120px' }}
+											style={{
+												width: columnWidths[index] || '120px',
+												cursor: h.sortable ? 'pointer' : 'default'
+											}}
+											onClick={h.sortable ? () => handleHeaderClick(h.key) : undefined}
 										>
-											{h.label}
+											<div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+												{h.label}
+												{h.sortable && getSortDirection(h.key) && (
+													<span style={{ fontSize: '12px', color: '#666' }}>
+														{getSortDirection(h.key) === 'asc' ? '↑' : '↓'}
+													</span>
+												)}
+											</div>
 										</CoreTable.TableHeader>
 									))}
 

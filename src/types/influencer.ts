@@ -12,10 +12,4 @@ export interface Influencer {
   main_audience_gender: 'F' | 'M' | null;
   main_audience_age_range: string | null;
   is_verified: boolean;
-  categories?: string[];
-  last_upload_date?: string;
-  avg_video_views?: number;
-  avg_video_likes?: number;
-  avg_ad_cost?: number;
-  cpr?: number;
 }

@@ -67,6 +67,10 @@ export default function DiscoverPage() {
                 setLoading(true);
                 setError(null);
 
+                // 정렬 상태를 API 파라미터로 변환
+                const sortBy = sorting.length > 0 ? sorting[0].id : undefined;
+                const order = sorting.length > 0 ? (sorting[0].desc ? 'desc' : 'asc') : undefined;
+
                 // 필터 상태를 API 파라미터로 변환
                 const apiParams = {
                     page: currentPage,
@@ -83,12 +87,9 @@ export default function DiscoverPage() {
                     max_avg_reach: filterState.reachMax ? parseInt(filterState.reachMax.replace(/,/g, '')) : undefined,
                     categories: filterState.categories.length > 0 ? filterState.categories.join(',') : undefined,
                     is_verified: filterState.verified === '전체' ? undefined : filterState.verified === '있음' ? true : false,
+                    sort_by: sortBy,
+                    order: order,
                 };
-
-                console.log('필터 상태:', filterState);
-                console.log('verified 값:', filterState.verified);
-                console.log('is_verified 계산 결과:', filterState.verified === '전체' ? undefined : filterState.verified === '있음' ? true : false);
-                console.log('API 파라미터:', apiParams);
 
                 const response = await getDiscover(apiParams);
 
@@ -107,7 +108,7 @@ export default function DiscoverPage() {
         };
 
         fetchData();
-    }, [router.query.page, filterState, itemsPerPage]);
+    }, [router.query.page, filterState, itemsPerPage, sorting]);
 
 
 
