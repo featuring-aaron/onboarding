@@ -13,11 +13,17 @@
 		"@featuring-corp/components": "*",
 		"@featuring-corp/design-tokens": "*",
 		"@featuring-corp/icons": "*",
+		"@tanstack/react-query": "^5.85.9",
+		"@tanstack/react-table": "^8.21.3",
+		"axios": "^1.11.0",
+		"clsx": "^2.1.1",
+		"lucide-react": "^0.542.0",
 		"next": "14.2.7",
 		"next-swagger-doc": "^0.4.0",
 		"react": "^18",
 		"react-dom": "^18",
-		"swagger-ui-react": "^5.17.14"
+		"swagger-ui-react": "^5.17.14",
+		"tailwind-merge": "^3.3.1"
 	},
 	"devDependencies": {
 		"@tanstack/eslint-plugin-query": "^5.53.0",
